@@ -15,6 +15,7 @@
 """The Python AsyncIO implementation of the GRPC helloworld.Greeter client."""
 
 import asyncio
+import ctypes
 import logging
 
 import grpc
@@ -23,7 +24,9 @@ import helloworld_pb2_grpc
 
 
 async def run() -> None:
-    async with grpc.aio.insecure_channel("localhost:50051") as channel:
+    max_int = 2 ** (ctypes.sizeof(ctypes.c_int) * 8 - 1) - 1
+    opts = [("grpc.keepalive_time_ms", max_int)]
+    async with grpc.aio.insecure_channel("localhost:50051", options=opts) as channel:
         stub = helloworld_pb2_grpc.GreeterStub(channel)
         response = await stub.SayHello(helloworld_pb2.HelloRequest(name="you"))
     print("Greeter client received: " + response.message)
